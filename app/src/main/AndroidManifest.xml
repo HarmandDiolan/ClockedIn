@@ -13,6 +13,9 @@
         android:theme="@style/Theme.ClockedIn"
         tools:targetApi="31">
         <activity
+            android:name=".Signup"
+            android:exported="false" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false" />
         <activity

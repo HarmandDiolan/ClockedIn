@@ -18,7 +18,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sign in"
+        android:text="Sign up"
         android:textSize="20sp"
         android:textColor="@color/white"
         android:textStyle="bold"
@@ -49,37 +49,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <EditText
+        android:id="@+id/confirmPassword"
+        android:hint="Confirm Password"
+        android:background="@color/white"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
         android:layout_marginBottom="16dp" />
 
     <Button
-        android:id="@+id/btnLogin"
+        android:id="@+id/btnSignup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:backgroundTint="#000000"
-        android:text="Sign in"
-        android:textColor="#000000"
+        android:text="Sign up"
+        android:textColor="#FFFFFF"
         app:iconTintMode="src_atop"
         app:strokeColor="#FFFCFC"
         app:strokeWidth="2dp" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textViewLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Forgot Password?"
+        android:text="Already have an account? Login"
         android:textAlignment="center"
-        android:textColor="#FAF8F8" />
-
-    <!-- Link to SignupActivity -->
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Don't have an account? Sign up"
-        android:textAlignment="center"
-        android:textAllCaps="false"
         android:textColor="#F8F0F0"
-        android:layout_marginTop="16dp"/>
-
+        android:layout_marginTop="12dp"/>
 </LinearLayout>

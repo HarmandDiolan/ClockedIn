@@ -4,16 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class LoginActivity extends AppCompatActivity {
     EditText email, password;
     Button btnLogin;
+    TextView signUpText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,10 +21,17 @@ public class LoginActivity extends AppCompatActivity {
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         btnLogin = findViewById(R.id.btnLogin);
+        signUpText = findViewById(R.id.textView4); // Sign-up TextView
 
         btnLogin.setOnClickListener(v -> {
-            // You can add actual auth logic here
+            // Add authentication logic here (e.g., Firebase Auth)
             //startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
+        });
+
+        // Redirect to SignupActivity when the "Don't have an account? Sign up" TextView is clicked
+        signUpText.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, Signup.class);
+            startActivity(intent);
         });
     }
 }

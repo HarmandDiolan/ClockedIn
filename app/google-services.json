@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "817338968179",
+    "project_id": "clockedin-3cada",
+    "storage_bucket": "clockedin-3cada.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817338968179:android:653e7103db30d182f8e206",
+        "android_client_info": {
+          "package_name": "com.example.clockedin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB36INUY8xU_lqQnYNX5O0sTzKyJx70viA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
