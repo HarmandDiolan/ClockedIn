@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="top|center_horizontal"
+    android:background="#000000"
+    android:padding="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/clockedin_logo"
+        android:visibility="visible" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign Up"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:fontFamily="@font/poppins"
+        android:layout_gravity="start"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/username"
+        android:hint="Username"
+        android:background="@drawable/edittext_background"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA"
+        android:inputType="textPersonName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/contact_number"
+        android:hint="Contact Number"
+        android:background="@drawable/edittext_background"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA"
+        android:inputType="phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/email"
+        android:hint="Email address"
+        android:background="@drawable/edittext_background"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA"
+        android:inputType="textEmailAddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/password"
+        android:hint="Password"
+        android:background="@drawable/edittext_background"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnSignup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#000000"
+        android:text="Sign Up"
+        android:textColor="#FFFFFF"
+        app:iconTintMode="src_atop"
+        app:strokeColor="#FFFCFC"
+        app:strokeWidth="2dp" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="Already have account? Sign in"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="#F8F0F0" />
+
+</LinearLayout>

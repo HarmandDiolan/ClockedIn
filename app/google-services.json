@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1075414918615",
+    "firebase_url": "https://clockedin-78429-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "clockedin-78429",
+    "storage_bucket": "clockedin-78429.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075414918615:android:b47a0fc810474f9d645792",
+        "android_client_info": {
+          "package_name": "com.example.clockedin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBePUdZBYYGkskFyLBQTIexyVD-n9oFzb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
