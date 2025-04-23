@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/baseline_space_dashboard_24"
+            android:title="Home"/>
+
+        <item
+            android:id="@+id/profile"
+            android:icon="@drawable/baseline_person_24"
+            android:title="Profile"/>
+
+        <item
+            android:id="@+id/attendance"
+            android:icon="@drawable/baseline_checklist_24"
+            android:title="Attendance"/>
+    </group>
+
+    <item
+        android:title="">
+        <menu>
+            <item
+                android:id="@+id/signOut"
+                android:icon="@drawable/baseline_logout_24"
+                android:title="Sign Out" />
+        </menu>
+
+    </item>
+
+</menu>

@@ -11,11 +11,11 @@
         android:label="LoginFragment"
         tools:layout="@layout/fragment_login">
         <action
-            android:id="@+id/action_loginFragment2_to_signOutFragment"
-            app:destination="@id/signOutFragment" />
-        <action
             android:id="@+id/action_loginFragment2_to_signUpFragment2"
             app:destination="@id/signUpFragment" />
+        <action
+            android:id="@+id/action_loginFragment2_to_appMainActivity"
+            app:destination="@id/appMainActivity" />
     </fragment>
     <fragment
         android:id="@+id/signUpFragment"
@@ -27,15 +27,6 @@
             app:destination="@id/loginFragment2" />
     </fragment>
     <fragment
-        android:id="@+id/signOutFragment"
-        android:name="com.example.clockedin.views.SignOutFragment"
-        android:label="SignOutFragment"
-        tools:layout="@layout/fragment_sign_out">
-        <action
-            android:id="@+id/action_signOutFragment_to_loginFragment2"
-            app:destination="@id/loginFragment2" />
-    </fragment>
-    <fragment
         android:id="@+id/welcomeFragment"
         android:name="com.example.clockedin.views.WelcomeFragment"
         android:label="fragment_welcome"
@@ -44,5 +35,10 @@
             android:id="@+id/action_welcomeFragment_to_loginFragment2"
             app:destination="@id/loginFragment2" />
     </fragment>
+    <activity
+        android:id="@+id/appMainActivity"
+        android:name="com.example.clockedin.views.AppMainActivity"
+        android:label="activity_app_main"
+        tools:layout="@layout/activity_app_main" />
 
 </navigation>

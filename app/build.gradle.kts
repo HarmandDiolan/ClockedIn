@@ -43,6 +43,7 @@ dependencies {
     // Firebase Libraries
     implementation("com.google.firebase:firebase-auth:21.0.5")
     implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation(libs.activity)
 
     // Testing Libraries
     testImplementation("junit:junit:4.13.2")

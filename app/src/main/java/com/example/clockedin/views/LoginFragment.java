@@ -37,7 +37,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onChanged(FirebaseUser firebaseUser) {
                 if (firebaseUser != null){
-                    navController.navigate(R.id.action_loginFragment2_to_signOutFragment);
+                    navController.navigate(R.id.action_loginFragment2_to_appMainActivity);
                 }
             }
         });
