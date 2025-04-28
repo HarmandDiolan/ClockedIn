@@ -1,19 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#1A1A1A"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".views.HomeFragment">
+    android:padding="16dp">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:id="@+id/nav_home"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Home Fragment"
-        android:textSize="30dp"
-        android:layout_centerInParent="true"
-        android:textColor="@color/black"/>
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-</RelativeLayout>
+        <!-- Greeting -->
+        <TextView
+            android:id="@+id/greetingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello, Harmand Lumapac!"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Info Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="#EEEEEE"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="8dp"
+            android:elevation="4dp"
+            android:backgroundTint="#EEEEEE">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Your Information"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#999999"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/studentId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Student ID: 2201100584"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/studentName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name: Harmand Lumapac"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/studentEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Email: 2201100584@student.buksu.edu.ph"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/studentPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phone: 09068619238"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <!-- Time In / Time Out buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="16dp"
+                android:weightSum="2">
+
+                <Button
+                    android:id="@+id/btnTimeIn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Time In"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#000000"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btnTimeOut"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Time Out"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#000000"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Boxes for hours -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Total Hours Worked\n20 hours"
+            android:gravity="center"
+            android:background="#EEEEEE"
+            android:padding="20dp"
+            android:layout_marginVertical="8dp"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:elevation="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Required OJT Time\n490 hours"
+            android:gravity="center"
+            android:background="#EEEEEE"
+            android:padding="20dp"
+            android:layout_marginVertical="8dp"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:elevation="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Remaining Time\n470 hours"
+            android:gravity="center"
+            android:background="#EEEEEE"
+            android:padding="20dp"
+            android:layout_marginVertical="8dp"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:elevation="4dp" />
+
+    </LinearLayout>
+</ScrollView>
