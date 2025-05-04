@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("com.google.gms.google-services") // Correct Kotlin DSL usage
+
 }
 
 android {
@@ -34,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation (libs.zxing)
     // Core Android Libraries
     implementation("androidx.appcompat:appcompat:1.3.1")
     implementation("com.google.android.material:material:1.4.0")
@@ -54,4 +56,6 @@ dependencies {
     val nav_version = "2.8.9"
     implementation("androidx.navigation:navigation-fragment:$nav_version")
     implementation("androidx.navigation:navigation-ui:$nav_version")
+
+
 }
