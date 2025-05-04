@@ -43,8 +43,9 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.0")
 
     // Firebase Libraries
-    implementation("com.google.firebase:firebase-auth:21.0.5")
-    implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore)
     implementation(libs.activity)
 
     // Testing Libraries

@@ -13,6 +13,7 @@ googleGmsGoogleServices = "4.4.2"
 firebaseAuth = "23.2.0"
 firebaseDatabase = "21.0.0"
 zxing = "4.3.0"
+firestore = "25.1.4"
 
 
 [libraries]
@@ -28,6 +29,7 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 zxing = { group = "com.journeyapps", name = "zxing-android-embedded", version.ref = "zxing" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firestore" }
 
 
 [plugins]
