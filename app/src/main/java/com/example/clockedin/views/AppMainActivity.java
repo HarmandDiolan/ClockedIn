@@ -1,8 +1,13 @@
 package com.example.clockedin.views;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -13,7 +18,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.Navigation;
 
 import com.example.clockedin.R;
 import com.example.clockedin.viewmodel.AuthViewModel;
@@ -43,7 +47,22 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        if(savedInstanceState == null){
+        // Apply styling to Sign Out menu item
+        MenuItem signOutItem = navigationView.getMenu().findItem(R.id.signOut);
+        if (signOutItem != null) {
+            SpannableString styledTitle = new SpannableString(signOutItem.getTitle());
+
+            // Set font size to 12sp
+            styledTitle.setSpan(new AbsoluteSizeSpan(18, true), 0, styledTitle.length(), 0);
+            // Set text color to gray
+            styledTitle.setSpan(new ForegroundColorSpan(Color.GRAY), 0, styledTitle.length(), 0);
+            // Set italic style
+            styledTitle.setSpan(new StyleSpan(Typeface.ITALIC), 0, styledTitle.length(), 0);
+
+            signOutItem.setTitle(styledTitle);
+        }
+
+        if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
             navigationView.setCheckedItem(R.id.nav_home);
         }
@@ -62,10 +81,10 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
         } else if (itemId == R.id.signOut) {
             // Sign out using AuthViewModel
             authViewModel.signOut();
-            
+
             // Show logout message
             Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-            
+
             // Close the activity to return to login screen
             finish();
         }
@@ -75,10 +94,10 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
     }
 
     @Override
-    public void onBackPressed(){
-        if(drawerLayout.isDrawerOpen(GravityCompat.START)){
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
-        }else{
+        } else {
             super.onBackPressed();
         }
     }

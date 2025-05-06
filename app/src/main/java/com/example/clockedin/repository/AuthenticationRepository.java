@@ -15,6 +15,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class AuthenticationRepository {
+
     private Application application;
     private MutableLiveData<User> currentUserMutableLiveData;
     private MutableLiveData<Boolean> userLoggedMutableLiveData;
