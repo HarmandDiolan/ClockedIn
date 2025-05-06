@@ -1,7 +1,6 @@
 plugins {
-    id("com.android.application")
-    id("com.google.gms.google-services") // Correct Kotlin DSL usage
-
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -35,28 +34,18 @@ android {
 }
 
 dependencies {
-    implementation (libs.zxing)
-    // Core Android Libraries
-    implementation("androidx.appcompat:appcompat:1.3.1")
-    implementation("com.google.android.material:material:1.4.0")
-    implementation("androidx.activity:activity-ktx:1.2.3")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.0")
-
-    // Firebase Libraries
+    implementation(libs.appcompat)
+    implementation(libs.material)
+    implementation(libs.activity)
+    implementation(libs.constraintlayout)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
-    implementation(libs.activity)
+    implementation(libs.zxing)
 
-    // Testing Libraries
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.espresso:espresso-core:3.4.0")
-
-    // Navigation
-    val nav_version = "2.8.9"
-    implementation("androidx.navigation:navigation-fragment:$nav_version")
-    implementation("androidx.navigation:navigation-ui:$nav_version")
-
-
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
 }
