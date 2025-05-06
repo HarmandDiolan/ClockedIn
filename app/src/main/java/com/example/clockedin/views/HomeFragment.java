@@ -11,50 +11,65 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.clockedin.PortraitScannerActivity;
 import com.example.clockedin.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.clockedin.model.User;
+import com.example.clockedin.viewmodel.AuthViewModel;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class HomeFragment extends Fragment {
 
-    private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
+    private DatabaseReference dbRef;
+    private AuthViewModel authViewModel;
+    private User currentUser;
 
     private TextView tvTotalWorked, tvRequired, tvRemaining, tvGreeting;
     private Button btnTimeIn, btnTimeOut;
 
-    private long lastTimeInMillis   = 0L;  // timestamp of last clock‑in
-    private long totalWorkedMillis  = 0L;  // accumulated work time
+    private long lastTimeInMillis = 0L;  // timestamp of last clock‑in
+    private long totalWorkedMillis = 0L;  // accumulated work time
     private final long requiredMillis = 490L * 60 * 60 * 1000; // 490h in ms
     private String scanType = ""; // "IN" or "OUT"
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                           Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        db    = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
+        // Initialize AuthViewModel
+        authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
+        dbRef = FirebaseDatabase.getInstance().getReference("attendance");
 
         // bind UI
-        tvGreeting     = view.findViewById(R.id.greetingText);
-        tvTotalWorked  = view.findViewById(R.id.tvTotalWorked);
-        tvRequired     = view.findViewById(R.id.tvRequired);
-        tvRemaining    = view.findViewById(R.id.tvRemaining);
-        btnTimeIn      = view.findViewById(R.id.btnTimeIn);
-        btnTimeOut     = view.findViewById(R.id.btnTimeOut);
+        tvGreeting = view.findViewById(R.id.greetingText);
+        tvTotalWorked = view.findViewById(R.id.tvTotalWorked);
+        tvRequired = view.findViewById(R.id.tvRequired);
+        tvRemaining = view.findViewById(R.id.tvRemaining);
+        btnTimeIn = view.findViewById(R.id.btnTimeIn);
+        btnTimeOut = view.findViewById(R.id.btnTimeOut);
 
-        // load persisted data from Firestore
-        fetchStudentData();
+        // Observe current user
+        authViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                currentUser = user;
+                tvGreeting.setText("Hello, " + user.username + "!");
+                fetchStudentData();
+            }
+        });
 
         btnTimeIn.setOnClickListener(v -> {
             scanType = "IN";
@@ -70,28 +85,30 @@ public class HomeFragment extends Fragment {
     }
 
     private void fetchStudentData() {
-        String uid = mAuth.getCurrentUser().getUid();
-        if (uid == null) {
+        if (currentUser == null || currentUser.uid == null) {
             Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        DocumentReference ref = db.collection("students").document(uid);
-        ref.get().addOnSuccessListener(doc -> {
-            if (doc.exists()) {
-                String name = doc.getString("name");
-                if (name != null) tvGreeting.setText("Hello, " + name + "!");
-
-                Long savedTotal = doc.getLong("totalWorkedMillis");
-                Long savedIn    = doc.getLong("lastTimeInMillis");
-                totalWorkedMillis = (savedTotal != null ? savedTotal : 0L);
-                lastTimeInMillis  = (savedIn    != null ? savedIn    : 0L);
-
-                updateHourDisplays();
+        dbRef.child(currentUser.uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    if (snapshot.child("totalWorkedMillis").exists()) {
+                        totalWorkedMillis = snapshot.child("totalWorkedMillis").getValue(Long.class);
+                    }
+                    if (snapshot.child("lastTimeInMillis").exists()) {
+                        lastTimeInMillis = snapshot.child("lastTimeInMillis").getValue(Long.class);
+                    }
+                    updateHourDisplays();
+                }
             }
-        }).addOnFailureListener(e ->
-                Toast.makeText(getContext(), "Error loading data", Toast.LENGTH_SHORT).show()
-        );
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(getContext(), "Error loading data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateHourDisplays() {
@@ -125,7 +142,7 @@ public class HomeFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         IntentResult r = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (r != null && r.getContents() != null) {
-            if ("IN".equals(scanType))  recordTimeIn();
+            if ("IN".equals(scanType)) recordTimeIn();
             if ("OUT".equals(scanType)) recordTimeOut();
         } else {
             Toast.makeText(getContext(), "Scan Cancelled", Toast.LENGTH_SHORT).show();
@@ -148,7 +165,7 @@ public class HomeFragment extends Fragment {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-        long now     = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         long session = now - lastTimeInMillis;
         totalWorkedMillis += session;
 
@@ -164,13 +181,16 @@ public class HomeFragment extends Fragment {
     }
 
     private void persistState() {
-        String uid = mAuth.getCurrentUser().getUid();
-        if (uid == null) return;
-        DocumentReference ref = db.collection("students").document(uid);
-        ref.update(
-                "totalWorkedMillis", totalWorkedMillis,
-                "lastTimeInMillis",  lastTimeInMillis
-        );
+        if (currentUser == null || currentUser.uid == null) return;
+        
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("totalWorkedMillis", totalWorkedMillis);
+        updates.put("lastTimeInMillis", lastTimeInMillis);
+        
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e -> 
+                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
     }
 
     private String formatTime(long millis) {
@@ -179,13 +199,13 @@ public class HomeFragment extends Fragment {
     }
 
     private String formatDuration(long millis) {
-        long h = millis / (1000*60*60);
-        long m = (millis / (1000*60)) % 60;
+        long h = millis / (1000 * 60 * 60);
+        long m = (millis / (1000 * 60)) % 60;
         return String.format(Locale.getDefault(), "%dh %02dm", h, m);
     }
 
     private String formatHours(long millis) {
-        long h = millis / (1000*60*60);
+        long h = millis / (1000 * 60 * 60);
         return String.format(Locale.getDefault(), "%dh", h);
     }
 }

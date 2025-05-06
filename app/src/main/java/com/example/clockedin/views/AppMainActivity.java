@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,11 +15,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
-
 import com.example.clockedin.R;
 import com.example.clockedin.viewmodel.AuthViewModel;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
 
 public class AppMainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -43,13 +40,13 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
         navigationView.setNavigationItemSelectedListener(this);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
-            drawerLayout.addDrawerListener(toggle);
-            toggle.syncState();
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
-            if(savedInstanceState == null){
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
-                navigationView.setCheckedItem(R.id.nav_home);
-            }
+        if(savedInstanceState == null){
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+            navigationView.setCheckedItem(R.id.nav_home);
+        }
     }
 
     @Override
@@ -63,14 +60,14 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
         } else if (itemId == R.id.attendance) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AttendanceFragment()).commit();
         } else if (itemId == R.id.signOut) {
-            // Sign out from Firebase
+            // Sign out using AuthViewModel
             authViewModel.signOut();
             
             // Show logout message
             Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
             
-            // Navigate back to login screen
-            finish(); // Close the current activity and return to login screen
+            // Close the activity to return to login screen
+            finish();
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);

@@ -16,10 +16,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.clockedin.R;
+import com.example.clockedin.model.User;
 import com.example.clockedin.viewmodel.AuthViewModel;
-import com.google.firebase.auth.FirebaseUser;
 
 public class LoginFragment extends Fragment {
     private EditText emailEdit, passEdit;
@@ -33,10 +34,10 @@ public class LoginFragment extends Fragment {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory
                 .getInstance(getActivity().getApplication())).get(AuthViewModel.class);
-        viewModel.getUserData().observe(this, new Observer<FirebaseUser>() {
+        viewModel.getUserData().observe(this, new Observer<User>() {
             @Override
-            public void onChanged(FirebaseUser firebaseUser) {
-                if (firebaseUser != null){
+            public void onChanged(User user) {
+                if (user != null){
                     navController.navigate(R.id.action_loginFragment2_to_appMainActivity);
                 }
             }
@@ -75,6 +76,8 @@ public class LoginFragment extends Fragment {
 
                 if(!email.isEmpty() && !pass.isEmpty()){
                     viewModel.signIn(email, pass);
+                } else {
+                    Toast.makeText(getContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 }
             }
         });
