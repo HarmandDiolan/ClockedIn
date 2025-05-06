@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ import com.example.clockedin.model.User;
 import com.example.clockedin.viewmodel.AuthViewModel;
 
 public class LoginFragment extends Fragment {
+    private static final String TAG = "LoginFragment";
     private EditText emailEdit, passEdit;
     private TextView signUpText;
     private Button loginBtn;
@@ -38,6 +40,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onChanged(User user) {
                 if (user != null){
+                    Log.d(TAG, "User logged in: " + user.username);
                     navController.navigate(R.id.action_loginFragment2_to_appMainActivity);
                 }
             }
@@ -51,35 +54,35 @@ public class LoginFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_login, container, false);
     }
 
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        
+        navController = Navigation.findNavController(view);
+        
+        // Initialize views
         emailEdit = view.findViewById(R.id.email_login);
         passEdit = view.findViewById(R.id.password_login);
-        signUpText = view.findViewById(R.id.textView_login);
         loginBtn = view.findViewById(R.id.btnLogin);
-
-        navController = Navigation.findNavController(view);
-
-        signUpText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navController.navigate(R.id.action_loginFragment2_to_signUpFragment2);
+        signUpText = view.findViewById(R.id.textView_login);
+        
+        // Login button click listener
+        loginBtn.setOnClickListener(v -> {
+            String email = emailEdit.getText().toString().trim();
+            String password = passEdit.getText().toString().trim();
+            
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
             }
+            
+            // Attempt to sign in
+            viewModel.signIn(email, password);
         });
-
-        loginBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = emailEdit.getText().toString();
-                String pass = passEdit.getText().toString();
-
-                if(!email.isEmpty() && !pass.isEmpty()){
-                    viewModel.signIn(email, pass);
-                } else {
-                    Toast.makeText(getContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
-                }
-            }
+        
+        // Sign up text click listener
+        signUpText.setOnClickListener(v -> {
+            navController.navigate(R.id.action_loginFragment2_to_signUpFragment2);
         });
     }
 }

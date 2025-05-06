@@ -2,6 +2,7 @@ package com.example.clockedin.views;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,11 +34,13 @@ import java.util.Map;
 
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
     private DatabaseReference dbRef;
     private AuthViewModel authViewModel;
     private User currentUser;
 
     private TextView tvTotalWorked, tvRequired, tvRemaining, tvGreeting;
+    private TextView studentPhone, studentId, studentName, studentEmail;
     private Button btnTimeIn, btnTimeOut;
 
     private long lastTimeInMillis = 0L;  // timestamp of last clock‑in
@@ -50,7 +53,7 @@ public class HomeFragment extends Fragment {
                            Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Initialize AuthViewModel
+        // Initialize AuthViewModel - use the activity scope to ensure we get the same instance
         authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         dbRef = FirebaseDatabase.getInstance().getReference("attendance");
 
@@ -61,13 +64,29 @@ public class HomeFragment extends Fragment {
         tvRemaining = view.findViewById(R.id.tvRemaining);
         btnTimeIn = view.findViewById(R.id.btnTimeIn);
         btnTimeOut = view.findViewById(R.id.btnTimeOut);
+        
+        // bind student info views
+        studentPhone = view.findViewById(R.id.studentPhone);
+        studentId = view.findViewById(R.id.studentId);
+        studentName = view.findViewById(R.id.studentName);
+        studentEmail = view.findViewById(R.id.studentEmail);
+
+        // Set default greeting while waiting for data
+        tvGreeting.setText("Hello, User!");
 
         // Observe current user
         authViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 currentUser = user;
-                tvGreeting.setText("Hello, " + user.username + "!");
+                Log.d(TAG, "User data received: " + user.username);
+                // Make sure to update UI on the main thread
+                requireActivity().runOnUiThread(() -> {
+                    tvGreeting.setText("Hello, " + user.username + "!");
+                    updateStudentInfo(user);
+                });
                 fetchStudentData();
+            } else {
+                Log.d(TAG, "User data is null");
             }
         });
 
@@ -82,6 +101,21 @@ public class HomeFragment extends Fragment {
         });
 
         return view;
+    }
+    
+    private void updateStudentInfo(User user) {
+        if (user != null) {
+            studentName.setText("Name: " + user.username);
+            studentEmail.setText("Email: " + user.email);
+            studentPhone.setText("Phone: " + user.contactNumber);
+            
+            // Extract student ID from email (part before the @ symbol)
+            String studentIdValue = "";
+            if (user.email != null && user.email.contains("@")) {
+                studentIdValue = user.email.split("@")[0];
+            }
+            studentId.setText("Student ID: " + studentIdValue);
+        }
     }
 
     private void fetchStudentData() {

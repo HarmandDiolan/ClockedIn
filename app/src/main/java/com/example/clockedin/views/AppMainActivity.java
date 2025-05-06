@@ -20,6 +20,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.clockedin.R;
+import com.example.clockedin.model.User;
 import com.example.clockedin.viewmodel.AuthViewModel;
 import com.google.android.material.navigation.NavigationView;
 
@@ -27,6 +28,7 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
 
     private DrawerLayout drawerLayout;
     private AuthViewModel authViewModel;
+    private User currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +37,21 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
 
         // Initialize AuthViewModel
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        
+        // Observe user data changes
+        authViewModel.getUserData().observe(this, user -> {
+            if (user != null) {
+                currentUser = user;
+                // Now we have the user data in the activity
+                // Let's load the HomeFragment after we have the user data
+                if (savedInstanceState == null) {
+                    loadHomeFragment();
+                }
+            } else {
+                // If user is null, navigate back to login
+                finish();
+            }
+        });
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -62,10 +79,16 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
             signOutItem.setTitle(styledTitle);
         }
 
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
-            navigationView.setCheckedItem(R.id.nav_home);
-        }
+        // We'll load HomeFragment when user data is ready
+        navigationView.setCheckedItem(R.id.nav_home);
+    }
+
+    private void loadHomeFragment() {
+        HomeFragment homeFragment = new HomeFragment();
+        // If needed, could pass user data in a bundle here
+        getSupportFragmentManager().beginTransaction()
+            .replace(R.id.fragment_container, homeFragment)
+            .commit();
     }
 
     @Override
