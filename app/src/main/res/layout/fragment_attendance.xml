@@ -57,7 +57,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#E0E0E0"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
 
             <TextView
                 android:text="Current Session Timer"
@@ -78,6 +79,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+
+        <!-- Add Download Button -->
+        <Button
+            android:id="@+id/downloadPdfButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Download Daily Time Record"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#000000"
+            android:padding="12dp"/>
 
     </LinearLayout>
 </ScrollView>

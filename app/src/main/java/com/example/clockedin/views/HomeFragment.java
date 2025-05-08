@@ -27,6 +27,7 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -189,7 +190,13 @@ public class HomeFragment extends Fragment {
         Map<String, Object> updates = new HashMap<>();
         updates.put("lastTimeInMillis", lastTimeInMillis);
         updates.put("lastStoredTimeIn", lastTimeInMillis);
-        updates.put("lastStoredTimeOut", null);
+        
+        // Add to attendance history
+        String historyKey = dbRef.child(currentUser.uid).child("history").push().getKey();
+        Map<String, Object> historyData = new HashMap<>();
+        historyData.put("date", new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date(lastTimeInMillis)));
+        historyData.put("timeIn", lastTimeInMillis);
+        updates.put("history/" + historyKey, historyData);
         
         dbRef.child(currentUser.uid).updateChildren(updates)
                 .addOnFailureListener(e -> 
@@ -211,6 +218,24 @@ public class HomeFragment extends Fragment {
         long now = System.currentTimeMillis();
         long session = now - lastTimeInMillis;
         totalWorkedMillis += session;
+
+        // Update the latest history entry with time out
+        dbRef.child(currentUser.uid).child("history").orderByKey().limitToLast(1)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            for (DataSnapshot historySnapshot : snapshot.getChildren()) {
+                                historySnapshot.getRef().child("timeOut").setValue(now);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        // Handle error
+                    }
+                });
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("totalWorkedMillis", totalWorkedMillis);
