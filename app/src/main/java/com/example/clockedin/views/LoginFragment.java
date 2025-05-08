@@ -115,9 +115,8 @@ public class LoginFragment extends Fragment {
     private void showForgotPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
-        EditText emailInput = dialogView.findViewById(R.id.emailInput);
+        EditText emailInput = dialogView.findViewById(R.id.emailEditText);
         Button resetButton = dialogView.findViewById(R.id.resetButton);
-        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
 
         AlertDialog dialog = builder.setView(dialogView).create();
 
@@ -130,8 +129,6 @@ public class LoginFragment extends Fragment {
             viewModel.resetPassword(email);
             dialog.dismiss();
         });
-
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
