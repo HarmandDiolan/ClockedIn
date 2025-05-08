@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.1"
+agp = "8.8.2"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.5.1"
@@ -15,6 +15,7 @@ firebaseDatabase = "21.0.0"
 zxing = "4.3.0"
 firestore = "25.1.4"
 googleAuth = "20.7.0"
+
 
 
 [libraries]

@@ -186,10 +186,20 @@ public class HomeFragment extends Fragment {
 
     private void recordTimeIn() {
         lastTimeInMillis = System.currentTimeMillis();
+        
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("lastTimeInMillis", lastTimeInMillis);
+        updates.put("lastStoredTimeIn", lastTimeInMillis);
+        updates.put("lastStoredTimeOut", null);
+        
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e -> 
+                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+
         Toast.makeText(getContext(),
                 "Clocked IN at " + formatTime(lastTimeInMillis),
                 Toast.LENGTH_SHORT).show();
-        persistState();
     }
 
     private void recordTimeOut() {
@@ -203,6 +213,16 @@ public class HomeFragment extends Fragment {
         long session = now - lastTimeInMillis;
         totalWorkedMillis += session;
 
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("totalWorkedMillis", totalWorkedMillis);
+        updates.put("lastTimeInMillis", 0L);
+        updates.put("lastStoredTimeOut", now);
+        
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e -> 
+                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+
         Toast.makeText(getContext(),
                 "Clocked OUT at " + formatTime(now) +
                         "\nSession: " + formatDuration(session) +
@@ -211,7 +231,6 @@ public class HomeFragment extends Fragment {
 
         lastTimeInMillis = 0L;
         updateHourDisplays();
-        persistState();
     }
 
     private void persistState() {
