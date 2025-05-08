@@ -52,4 +52,8 @@ public class AuthViewModel extends AndroidViewModel {
     public void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         repository.handleGoogleSignInResult(completedTask);
     }
+
+    public void resetPassword(String email) {
+        repository.resetPassword(email);
+    }
 }

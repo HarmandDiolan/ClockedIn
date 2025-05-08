@@ -31,6 +31,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/NOTICE.md"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/INDEX.LIST"
+        }
+    }
 }
 
 dependencies {
@@ -45,6 +55,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.google.auth)
     implementation(libs.zxing)
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

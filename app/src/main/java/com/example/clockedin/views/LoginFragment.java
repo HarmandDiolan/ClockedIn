@@ -1,5 +1,6 @@
 package com.example.clockedin.views;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -35,7 +36,7 @@ public class LoginFragment extends Fragment {
     private static final int RC_SIGN_IN = 9001;
     
     private EditText emailEdit, passEdit;
-    private TextView signUpText;
+    private TextView signUpText, forgotPasswordText;
     private Button loginBtn;
     private MaterialButton googleSignInBtn;
     private AuthViewModel viewModel;
@@ -76,6 +77,7 @@ public class LoginFragment extends Fragment {
         loginBtn = view.findViewById(R.id.btnLogin);
         signUpText = view.findViewById(R.id.textView_login);
         googleSignInBtn = view.findViewById(R.id.btnGoogleSignIn);
+        forgotPasswordText = view.findViewById(R.id.textView);
         
         // Login button click listener
         loginBtn.setOnClickListener(v -> {
@@ -99,9 +101,39 @@ public class LoginFragment extends Fragment {
         // Google Sign In button click listener
         googleSignInBtn.setOnClickListener(v -> {
             GoogleSignInClient signInClient = viewModel.getGoogleSignInClient();
-            Intent signInIntent = signInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+            // Sign out first to ensure account picker is shown
+            signInClient.signOut().addOnCompleteListener(task -> {
+                Intent signInIntent = signInClient.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            });
         });
+
+        // Forgot Password click listener
+        forgotPasswordText.setOnClickListener(v -> showForgotPasswordDialog());
+    }
+
+    private void showForgotPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
+        EditText emailInput = dialogView.findViewById(R.id.emailInput);
+        Button resetButton = dialogView.findViewById(R.id.resetButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+
+        AlertDialog dialog = builder.setView(dialogView).create();
+
+        resetButton.setOnClickListener(v -> {
+            String email = emailInput.getText().toString().trim();
+            if (email.isEmpty()) {
+                emailInput.setError("Please enter your email");
+                return;
+            }
+            viewModel.resetPassword(email);
+            dialog.dismiss();
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     @Override

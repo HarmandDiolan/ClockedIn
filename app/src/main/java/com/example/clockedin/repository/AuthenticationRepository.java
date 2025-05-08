@@ -26,6 +26,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.example.clockedin.utils.EmailSender;
 
 public class AuthenticationRepository {
     private static final String TAG = "AuthRepo";
@@ -65,6 +66,9 @@ public class AuthenticationRepository {
                 .requestEmail()
                 .build();
         googleSignInClient = GoogleSignIn.getClient(application, gso);
+        
+        // Sign out from Google to ensure account picker is shown
+        googleSignInClient.signOut();
         
         // Check if we have a saved user and restore it
         checkForSavedUser();
@@ -255,5 +259,63 @@ public class AuthenticationRepository {
         clearUserFromPrefs();
         currentUserMutableLiveData.postValue(null);
         userLoggedMutableLiveData.postValue(true);
+    }
+
+    public void resetPassword(String email) {
+        // Use the correct database reference path
+        dbRef.orderByChild("email")
+                .equalTo(email)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            String temporaryPassword = generateTemporaryPassword();
+                            String encryptedPassword = PasswordUtils.encryptPassword(temporaryPassword);
+                            
+                            // Update password in database
+                            for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                                userSnapshot.getRef().child("password").setValue(encryptedPassword);
+                            }
+
+                            // Send email with temporary password
+                            String subject = "Your Temporary Password - ClockedIn";
+                            String message = "Your temporary password is: " + temporaryPassword + "\n\n" +
+                                    "Please login with this password and change it immediately for security reasons.";
+                            
+                            EmailSender.sendEmail(email, subject, message, new EmailSender.EmailCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    Toast.makeText(application, "Temporary password sent to your email", Toast.LENGTH_LONG).show();
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Toast.makeText(application, "Failed to send email: " + error, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        } else {
+                            Toast.makeText(application, "Email not registered", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(application, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private String generateTemporaryPassword() {
+        // Generate a random 8-character password
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder password = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        
+        for (int i = 0; i < 8; i++) {
+            int index = random.nextInt(chars.length());
+            password.append(chars.charAt(index));
+        }
+        
+        return password.toString();
     }
 }
