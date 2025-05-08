@@ -55,7 +55,7 @@ public class HomeFragment extends Fragment {
 
         // Initialize AuthViewModel - use the activity scope to ensure we get the same instance
         authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
-        dbRef = FirebaseDatabase.getInstance().getReference("attendance");
+        dbRef = FirebaseDatabase.getInstance().getReference("users"); // Changed to users reference
 
         // bind UI
         tvGreeting = view.findViewById(R.id.greetingText);
@@ -78,7 +78,7 @@ public class HomeFragment extends Fragment {
         authViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 currentUser = user;
-                Log.d(TAG, "User data received: " + user.username);
+                Log.d(TAG, "User data received: " + user.username + ", Phone: " + user.contactNumber);
                 requireActivity().runOnUiThread(() -> {
                     tvGreeting.setText("Hello, " + user.username + "!");
                     updateStudentInfo(user);
@@ -104,9 +104,19 @@ public class HomeFragment extends Fragment {
     
     private void updateStudentInfo(User user) {
         if (user != null) {
+            Log.d(TAG, "Updating student info - Name: " + user.username + ", Phone: " + user.contactNumber);
+            
             studentName.setText("Name: " + user.username);
             studentEmail.setText("Email: " + user.email);
-            studentPhone.setText("Phone: " + user.contactNumber);
+            
+            // Handle phone number display
+            String phoneNumber = user.contactNumber;
+            if (phoneNumber == null || phoneNumber.isEmpty()) {
+                // Try to fetch from Firebase if not available in user object
+                fetchUserPhoneNumber(user.uid);
+            } else {
+                studentPhone.setText("Phone: " + phoneNumber);
+            }
             
             // Extract student ID from email (part before the @ symbol)
             String studentIdValue = "";
@@ -115,6 +125,40 @@ public class HomeFragment extends Fragment {
             }
             studentId.setText("Student ID: " + studentIdValue);
         }
+    }
+
+    private void fetchUserPhoneNumber(String userId) {
+        if (userId == null) return;
+        
+        dbRef.child(userId).child("contactNumber").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String phoneNumber = snapshot.getValue(String.class);
+                    if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                        requireActivity().runOnUiThread(() -> {
+                            studentPhone.setText("Phone: " + phoneNumber);
+                        });
+                    } else {
+                        requireActivity().runOnUiThread(() -> {
+                            studentPhone.setText("Phone: Not set");
+                        });
+                    }
+                } else {
+                    requireActivity().runOnUiThread(() -> {
+                        studentPhone.setText("Phone: Not set");
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Error fetching phone number: " + error.getMessage());
+                requireActivity().runOnUiThread(() -> {
+                    studentPhone.setText("Phone: Error loading");
+                });
+            }
+        });
     }
 
     private void fetchStudentData() {
