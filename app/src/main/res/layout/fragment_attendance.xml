@@ -1,19 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".views.AttendanceFragment">
+    android:background="#FFFFFF">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:id="@+id/nav_attendance"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Attendance Fragment"
-        android:textSize="30dp"
-        android:layout_centerInParent="true"
-        android:textColor="@color/black"/>
+        android:padding="20dp">
 
-</RelativeLayout>
+        <!-- Attendance Record Card -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#E0E0E0"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:text="Attendance Record"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#000"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:id="@+id/dateText"
+                android:text="Date: --"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/timeInText"
+                android:text="Time In: --"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/timeOutText"
+                android:text="Time Out: --"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Current Session Timer Card -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#E0E0E0"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:text="Current Session Timer"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#000"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:id="@+id/sessionTimerText"
+                android:text="0 Hour 0 Minutes 0 Seconds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Add Download Button -->
+        <Button
+            android:id="@+id/downloadPdfButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Download Daily Time Record"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#000000"
+            android:padding="12dp"/>
+
+    </LinearLayout>
+</ScrollView>

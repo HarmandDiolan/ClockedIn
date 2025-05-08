@@ -16,6 +16,8 @@ zxing = "4.3.0"
 firestore = "25.1.4"
 googleAuth = "20.7.0"
 firebaseStorage = "20.3.0"
+itext = "5.5.13.3"
+
 
 
 [libraries]
@@ -34,6 +36,7 @@ zxing = { group = "com.journeyapps", name = "zxing-android-embedded", version.re
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firestore" }
 google-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googleAuth" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+itext = { group = "com.itextpdf", name = "itextpdf", version.ref = "itext" }
 
 
 [plugins]

@@ -1,13 +1,7 @@
 package com.example.clockedin.views;
 
-import android.Manifest;
 import android.app.AlertDialog;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,12 +11,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -38,11 +28,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
-    private static final int PERMISSION_REQUEST_CODE = 100;
     private AuthViewModel authViewModel;
     private User currentUser;
     private TextView greetingText, studentId, studentName, studentEmail, studentPhone;
@@ -50,28 +38,6 @@ public class ProfileFragment extends Fragment {
     private ShapeableImageView profileImage;
     private DatabaseReference dbRef;
     private StorageReference storageRef;
-    private Uri selectedImageUri;
-
-    private final ActivityResultLauncher<Intent> pickImage = registerForActivityResult(
-        new ActivityResultContracts.StartActivityForResult(),
-        result -> {
-            if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
-                selectedImageUri = result.getData().getData();
-                if (selectedImageUri != null) {
-                    uploadProfileImage(selectedImageUri);
-                }
-            }
-        }
-    );
-
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-        registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-            if (isGranted) {
-                openImagePicker();
-            } else {
-                Toast.makeText(requireContext(), "Permission required to select image", Toast.LENGTH_SHORT).show();
-            }
-        });
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -96,19 +62,13 @@ public class ProfileFragment extends Fragment {
         // Initialize Firebase references
         authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         dbRef = FirebaseDatabase.getInstance().getReference("users");
-        storageRef = FirebaseStorage.getInstance().getReference().child("profile_images");
-        
-        // Set default profile image immediately
-        loadDefaultProfileImage();
-
-        // Set up profile image click listener
-        profileImage.setOnClickListener(v -> checkPermissionAndPickImage());
+        storageRef = FirebaseStorage.getInstance().getReference();
 
         // Observe user data
         authViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 currentUser = user;
-                Log.d(TAG, "User data received - Name: " + user.username + ", Email: " + user.email);
+                Log.d(TAG, "User data received - Name: " + user.username + ", Phone: " + user.contactNumber);
                 updateUI(user);
                 loadProfileImage(user.email);
             } else {
@@ -120,134 +80,35 @@ public class ProfileFragment extends Fragment {
         btnEditProfile.setOnClickListener(v -> showEditProfileDialog());
     }
 
-    private void checkPermissionAndPickImage() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES);
-            } else {
-                openImagePicker();
-            }
-        } else {
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-            } else {
-                openImagePicker();
-            }
-        }
-    }
-
-    private void openImagePicker() {
-        try {
-            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            pickImage.launch(intent);
-        } catch (Exception e) {
-            Log.e(TAG, "Error opening image picker: " + e.getMessage());
-            Toast.makeText(requireContext(), "Error opening image picker", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void uploadProfileImage(Uri imageUri) {
-        if (currentUser == null || currentUser.email == null) {
-            Toast.makeText(requireContext(), "User data not available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            // Create a unique filename using the user's email
-            String filename = currentUser.email.replace(".", "_") + ".jpg";
-            StorageReference imageRef = storageRef.child(filename);
-
-            // Show loading state
-            Glide.with(this)
-                .load(R.drawable.default_profile)
-                .circleCrop()
-                .into(profileImage);
-
-            // Upload the image
-            UploadTask uploadTask = imageRef.putFile(imageUri);
-            
-            uploadTask
-                .addOnSuccessListener(taskSnapshot -> {
-                    Log.d(TAG, "Image uploaded successfully");
-                    // Get the download URL
-                    imageRef.getDownloadUrl()
-                        .addOnSuccessListener(uri -> {
-                            Log.d(TAG, "Got download URL: " + uri.toString());
-                            // Update the UI with the new image
-                            requireActivity().runOnUiThread(() -> {
-                                Glide.with(requireContext())
-                                    .load(uri)
-                                    .circleCrop()
-                                    .into(profileImage);
-                                Toast.makeText(requireContext(), "Profile picture updated", Toast.LENGTH_SHORT).show();
-                            });
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error getting download URL: " + e.getMessage());
-                            requireActivity().runOnUiThread(() -> {
-                                Toast.makeText(requireContext(), "Error updating profile picture", Toast.LENGTH_SHORT).show();
-                            });
-                        });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error uploading image: " + e.getMessage());
-                    requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(requireContext(), "Error uploading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-                })
-                .addOnProgressListener(snapshot -> {
-                    double progress = (100.0 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
-                    Log.d(TAG, "Upload progress: " + progress + "%");
-                });
-        } catch (Exception e) {
-            Log.e(TAG, "Error in uploadProfileImage: " + e.getMessage());
-            Toast.makeText(requireContext(), "Error uploading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void loadProfileImage(String email) {
         if (email == null || email.isEmpty()) {
-            Log.e(TAG, "Email is null or empty, cannot load profile image");
+            Log.d(TAG, "Email is null or empty, cannot load profile image");
             return;
         }
 
-        try {
-            String filename = email.replace(".", "_") + ".jpg";
-            StorageReference imageRef = storageRef.child(filename);
-            Log.d(TAG, "Attempting to load image: " + filename);
+        // Create a reference to the profile image in Firebase Storage
+        String imagePath = "profile_images/" + email.replace(".", "_") + ".jpg";
+        StorageReference imageRef = storageRef.child(imagePath);
 
-            imageRef.getDownloadUrl()
-                .addOnSuccessListener(uri -> {
-                    Log.d(TAG, "Successfully got download URL: " + uri.toString());
-                    requireActivity().runOnUiThread(() -> {
-                        Glide.with(requireContext())
-                            .load(uri)
-                            .placeholder(R.drawable.default_profile)
-                            .error(R.drawable.default_profile)
-                            .circleCrop()
-                            .into(profileImage);
-                    });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error loading profile image: " + e.getMessage());
-                    loadDefaultProfileImage();
-                });
-        } catch (Exception e) {
-            Log.e(TAG, "Error in loadProfileImage: " + e.getMessage());
-            loadDefaultProfileImage();
-        }
-    }
-
-    private void loadDefaultProfileImage() {
-        Log.d(TAG, "Loading default profile image");
-        requireActivity().runOnUiThread(() -> {
-            Glide.with(requireContext())
-                .load(R.drawable.default_profile)
-                .circleCrop()
-                .into(profileImage);
-        });
+        // Load the image using Glide
+        imageRef.getDownloadUrl()
+            .addOnSuccessListener(uri -> {
+                Log.d(TAG, "Successfully got download URL for profile image");
+                Glide.with(this)
+                    .load(uri)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .circleCrop()
+                    .into(profileImage);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error loading profile image: " + e.getMessage());
+                // Load default profile image
+                Glide.with(this)
+                    .load(R.drawable.default_profile)
+                    .circleCrop()
+                    .into(profileImage);
+            });
     }
 
     private void updateUI(User user) {
