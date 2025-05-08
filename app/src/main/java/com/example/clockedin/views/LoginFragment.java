@@ -115,22 +115,38 @@ public class LoginFragment extends Fragment {
     private void showForgotPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
-        EditText emailInput = dialogView.findViewById(R.id.emailEditText);
+        EditText emailEditText = dialogView.findViewById(R.id.emailEditText);
         Button resetButton = dialogView.findViewById(R.id.resetButton);
 
-        AlertDialog dialog = builder.setView(dialogView).create();
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
 
         resetButton.setOnClickListener(v -> {
-            String email = emailInput.getText().toString().trim();
-            if (email.isEmpty()) {
-                emailInput.setError("Please enter your email");
+            String email = emailEditText.getText().toString().trim();
+            
+            // Validate institutional email
+            if (!isValidInstitutionalEmail(email)) {
+                Toast.makeText(requireContext(), 
+                    "Please use your institutional email",
+                    Toast.LENGTH_LONG).show();
                 return;
             }
+
+            if (email.isEmpty()) {
+                Toast.makeText(requireContext(), "Please enter your email", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             viewModel.resetPassword(email);
             dialog.dismiss();
         });
 
         dialog.show();
+    }
+
+    private boolean isValidInstitutionalEmail(String email) {
+        // Check if email ends with @student.buksu.edu.ph
+        return email.matches("^[A-Za-z0-9+_.-]+@student\\.buksu\\.edu\\.ph$");
     }
 
     @Override
@@ -139,7 +155,23 @@ public class LoginFragment extends Fragment {
 
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            viewModel.handleGoogleSignInResult(task);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+
+                if (!isValidInstitutionalEmail(account.getEmail())) {
+                    Toast.makeText(requireContext(), 
+                        "Please use your BukSU institutional email",
+                        Toast.LENGTH_LONG).show();
+
+                    viewModel.getGoogleSignInClient().signOut();
+                    return;
+                }
+                viewModel.handleGoogleSignInResult(task);
+            } catch (ApiException e) {
+                Log.w(TAG, "Google sign in failed", e);
+                Toast.makeText(requireContext(), "Google sign in failed: " + e.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

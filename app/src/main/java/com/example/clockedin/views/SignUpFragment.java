@@ -63,16 +63,40 @@ public class SignUpFragment extends Fragment {
         );
 
         signUpBtn.setOnClickListener(v -> {
-            String email = emailEdit.getText().toString();
-            String pass = passEdit.getText().toString();
-            String username = usernameEdit.getText().toString();
-            String contact = contactEdit.getText().toString();
-
-            if (!email.isEmpty() && !pass.isEmpty() && !username.isEmpty() && !contact.isEmpty()) {
-                viewModel.register(email, pass, username, contact);
-            } else {
-                Toast.makeText(getContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            }
+            registerUser();
         });
+    }
+
+    private void registerUser() {
+        String email = emailEdit.getText().toString().trim();
+        String password = passEdit.getText().toString().trim();
+        String username = usernameEdit.getText().toString().trim();
+        String contact = contactEdit.getText().toString().trim();
+
+        // Validate institutional email
+        if (!isValidInstitutionalEmail(email)) {
+            Toast.makeText(requireContext(), 
+                "Please use your BukSU institutional email", 
+                Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (email.isEmpty() || password.isEmpty() || username.isEmpty() || contact.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Additional password validation
+        if (password.length() < 6) {
+            Toast.makeText(requireContext(), "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        viewModel.register(email, password, username, contact);
+    }
+
+    private boolean isValidInstitutionalEmail(String email) {
+        // Check if email ends with @student.buksu.edu.ph
+        return email.matches("^[A-Za-z0-9+_.-]+@student\\.buksu\\.edu\\.ph$");
     }
 }

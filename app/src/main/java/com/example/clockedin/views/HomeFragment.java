@@ -79,7 +79,6 @@ public class HomeFragment extends Fragment {
             if (user != null) {
                 currentUser = user;
                 Log.d(TAG, "User data received: " + user.username);
-                // Make sure to update UI on the main thread
                 requireActivity().runOnUiThread(() -> {
                     tvGreeting.setText("Hello, " + user.username + "!");
                     updateStudentInfo(user);
