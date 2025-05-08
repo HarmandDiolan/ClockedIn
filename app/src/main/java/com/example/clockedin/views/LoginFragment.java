@@ -1,5 +1,6 @@
 package com.example.clockedin.views;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -22,12 +23,21 @@ import android.widget.Toast;
 import com.example.clockedin.R;
 import com.example.clockedin.model.User;
 import com.example.clockedin.viewmodel.AuthViewModel;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
 
 public class LoginFragment extends Fragment {
     private static final String TAG = "LoginFragment";
+    private static final int RC_SIGN_IN = 9001;
+    
     private EditText emailEdit, passEdit;
     private TextView signUpText;
     private Button loginBtn;
+    private MaterialButton googleSignInBtn;
     private AuthViewModel viewModel;
     private NavController navController;
 
@@ -65,6 +75,7 @@ public class LoginFragment extends Fragment {
         passEdit = view.findViewById(R.id.password_login);
         loginBtn = view.findViewById(R.id.btnLogin);
         signUpText = view.findViewById(R.id.textView_login);
+        googleSignInBtn = view.findViewById(R.id.btnGoogleSignIn);
         
         // Login button click listener
         loginBtn.setOnClickListener(v -> {
@@ -84,5 +95,22 @@ public class LoginFragment extends Fragment {
         signUpText.setOnClickListener(v -> {
             navController.navigate(R.id.action_loginFragment2_to_signUpFragment2);
         });
+
+        // Google Sign In button click listener
+        googleSignInBtn.setOnClickListener(v -> {
+            GoogleSignInClient signInClient = viewModel.getGoogleSignInClient();
+            Intent signInIntent = signInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            viewModel.handleGoogleSignInResult(task);
+        }
     }
 }

@@ -8,6 +8,9 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.clockedin.model.User;
 import com.example.clockedin.repository.AuthenticationRepository;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.tasks.Task;
 
 public class AuthViewModel extends AndroidViewModel {
 
@@ -40,5 +43,13 @@ public class AuthViewModel extends AndroidViewModel {
 
     public void signOut(){
         repository.signOut();
+    }
+
+    public GoogleSignInClient getGoogleSignInClient() {
+        return repository.getGoogleSignInClient();
+    }
+
+    public void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        repository.handleGoogleSignInResult(completedTask);
     }
 }

@@ -13,7 +13,12 @@
           "package_name": "com.example.clockedin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1075414918615-52uukjel395a7j504ua4spmfk79q31ku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBePUdZBYYGkskFyLBQTIexyVD-n9oFzb0"
@@ -21,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1075414918615-52uukjel395a7j504ua4spmfk79q31ku.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

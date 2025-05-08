@@ -14,6 +14,7 @@ firebaseAuth = "23.2.0"
 firebaseDatabase = "21.0.0"
 zxing = "4.3.0"
 firestore = "25.1.4"
+googleAuth = "20.7.0"
 
 
 [libraries]
@@ -30,6 +31,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 zxing = { group = "com.journeyapps", name = "zxing-android-embedded", version.ref = "zxing" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firestore" }
+google-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "googleAuth" }
 
 
 [plugins]

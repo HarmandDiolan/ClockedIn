@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.google.auth)
     implementation(libs.zxing)
 
     testImplementation(libs.junit)
