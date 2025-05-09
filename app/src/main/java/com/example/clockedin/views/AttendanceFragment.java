@@ -87,33 +87,33 @@ public class AttendanceFragment extends Fragment {
             sessionTimerText = view.findViewById(R.id.sessionTimerText);
             downloadPdfButton = view.findViewById(R.id.downloadPdfButton);
 
-            // Set default values
-            dateText.setText("Date: --");
-            timeInText.setText("Time In: --");
-            timeOutText.setText("Time Out: --");
-            sessionTimerText.setText("0 Hour 0 Minutes 0 Seconds");
-
-            // Initialize other components
+            // Initialize AuthViewModel and database reference
             authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
-            dbRef = FirebaseDatabase.getInstance().getReference("attendance");
+            dbRef = FirebaseDatabase.getInstance().getReference("users"); // Changed to "users"
             timerHandler = new Handler(Looper.getMainLooper());
             attendanceHistory = new ArrayList<>();
 
             // Initialize the document launcher
             createDocumentLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data != null) {
-                            Uri uri = data.getData();
-                            if (uri != null) {
-                                generatePdf(uri);
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            Intent data = result.getData();
+                            if (data != null) {
+                                Uri uri = data.getData();
+                                if (uri != null) {
+                                    generatePdf(uri);
+                                }
                             }
                         }
                     }
-                }
             );
+
+            // Set default values
+            dateText.setText("Date: --");
+            timeInText.setText("Time In: --");
+            timeOutText.setText("Time Out: --");
+            sessionTimerText.setText("0 Hour 0 Minutes 0 Seconds");
 
             // Set button click listener
             downloadPdfButton.setOnClickListener(v -> createPdf());
@@ -128,82 +128,53 @@ public class AttendanceFragment extends Fragment {
 
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(), 
-                "Error initializing attendance view: " + e.getMessage(), 
-                Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(),
+                    "Error initializing attendance view: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
         }
 
         return view;
     }
 
     private void startListeningToAttendance() {
-        try {
-            if (currentUser == null || currentUser.uid == null) {
-                Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        if (currentUser == null || currentUser.uid == null) return;
 
-            dbRef.child(currentUser.uid).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    try {
-                        if (snapshot.exists()) {
-                            // Get the last time in
-                            Long timeIn = snapshot.child("lastStoredTimeIn").getValue(Long.class);
-                            Long timeOut = snapshot.child("lastStoredTimeOut").getValue(Long.class);
-                            lastTimeInMillis = snapshot.child("lastTimeInMillis").getValue(Long.class) != null ? 
-                                             snapshot.child("lastTimeInMillis").getValue(Long.class) : 0L;
+        dbRef.child(currentUser.uid).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    // Get the last time in
+                    Long timeIn = snapshot.child("lastTimeInMillis").getValue(Long.class);
+                    Long storedTimeIn = snapshot.child("lastStoredTimeIn").getValue(Long.class);
+                    Long storedTimeOut = snapshot.child("lastStoredTimeOut").getValue(Long.class);
+                    lastTimeInMillis = timeIn != null ? timeIn : 0L;
 
-                            if (timeIn != null && timeIn > 0) {
-                                Date date = new Date(timeIn);
-                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-                                SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                    if (lastTimeInMillis > 0) {
+                        // User is currently clocked in
+                        dateText.setText("Date: " + formatDate(lastTimeInMillis));
+                        timeInText.setText("Time In: " + formatTime(lastTimeInMillis));
+                        timeOutText.setText("Time Out: --");
+                        startSessionTimer();
+                    } else {
+                        // User is clocked out
+                        if (storedTimeIn != null && storedTimeIn > 0) {
+                            dateText.setText("Date: " + formatDate(storedTimeIn));
+                            timeInText.setText("Time In: " + formatTime(storedTimeIn));
 
-                                dateText.setText("Date: " + dateFormat.format(date));
-                                timeInText.setText("Time In: " + timeFormat.format(date));
-
-                                if (timeOut != null && timeOut > 0) {
-                                    timeOutText.setText("Time Out: " + timeFormat.format(new Date(timeOut)));
-                                } else {
-                                    timeOutText.setText("Time Out: --");
-                                }
-                            }
-
-                            // Start session timer if currently clocked in
-                            if (lastTimeInMillis > 0) {
-                                startSessionTimer();
-                            } else {
-                                sessionTimerText.setText("0 Hour 0 Minutes 0 Seconds");
+                            if (storedTimeOut != null && storedTimeOut > 0) {
+                                timeOutText.setText("Time Out: " + formatTime(storedTimeOut));
                             }
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(requireContext(), 
-                            "Error updating attendance data: " + e.getMessage(), 
-                            Toast.LENGTH_LONG).show();
+                        sessionTimerText.setText("0 Hour 0 Minutes 0 Seconds");
                     }
                 }
+            }
 
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    Toast.makeText(requireContext(), 
-                        "Database error: " + error.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(requireContext(), 
-                "Error setting up attendance listener: " + e.getMessage(), 
-                Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void startSessionTimer() {
-        timerHandler.removeCallbacks(timerRunnable);
-        if (lastTimeInMillis > 0) {
-            timerRunnable.run();
-        }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Handle error
+            }
+        });
     }
 
     private final Runnable timerRunnable = new Runnable() {
@@ -212,25 +183,40 @@ public class AttendanceFragment extends Fragment {
             if (lastTimeInMillis > 0) {
                 long currentSession = System.currentTimeMillis() - lastTimeInMillis;
                 sessionTimerText.setText(formatDuration(currentSession));
-                timerHandler.postDelayed(this, 1000);
+                timerHandler.postDelayed(this, 1000); // Update every second
             }
         }
     };
+
+    private void startSessionTimer() {
+        timerHandler.removeCallbacks(timerRunnable);
+        if (lastTimeInMillis > 0) {
+            timerRunnable.run();
+        }
+    }
+
+    private String formatTime(long millis) {
+        DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
+        return df.format(new Date(millis));
+    }
+
+    private String formatDate(long millis) {
+        DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM);
+        return df.format(new Date(millis));
+    }
 
     private String formatDuration(long millis) {
         long seconds = (millis / 1000) % 60;
         long minutes = (millis / (1000 * 60)) % 60;
         long hours = millis / (1000 * 60 * 60);
-        return String.format(Locale.getDefault(), 
-            "%d Hour %d Minutes %d Seconds", hours, minutes, seconds);
+        return String.format(Locale.getDefault(),
+                "%d Hour %d Minutes %d Seconds", hours, minutes, seconds);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (timerHandler != null) {
-            timerHandler.removeCallbacks(timerRunnable);
-        }
+        timerHandler.removeCallbacks(timerRunnable);
     }
 
     private void createPdf() {
@@ -246,9 +232,9 @@ public class AttendanceFragment extends Fragment {
             createDocumentLauncher.launch(intent);
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(), 
-                "Error initiating PDF creation: " + e.getMessage(), 
-                Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(),
+                    "Error initiating PDF creation: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -333,9 +319,9 @@ public class AttendanceFragment extends Fragment {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(), 
-                "Error generating PDF: " + e.getMessage(), 
-                Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(),
+                    "Error generating PDF: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -347,9 +333,9 @@ public class AttendanceFragment extends Fragment {
             startActivity(intent);
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(), 
-                "Unable to open PDF. Please check if you have a PDF viewer installed.", 
-                Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(),
+                    "Unable to open PDF. Please check if you have a PDF viewer installed.",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -359,9 +345,9 @@ public class AttendanceFragment extends Fragment {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 createPdf();
             } else {
-                Toast.makeText(requireContext(), 
-                    "Permission denied. Cannot create PDF.", 
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(),
+                        "Permission denied. Cannot create PDF.",
+                        Toast.LENGTH_SHORT).show();
             }
         }
     }

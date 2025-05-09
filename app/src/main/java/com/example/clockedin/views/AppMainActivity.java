@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.clockedin.R;
@@ -60,7 +61,15 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
+        // Create ActionBarDrawerToggle without string resources
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+            this, 
+            drawerLayout, 
+            toolbar, 
+            0, // Use 0 instead of string resource
+            0  // Use 0 instead of string resource
+        );
+        
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -79,8 +88,13 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
             signOutItem.setTitle(styledTitle);
         }
 
-        // We'll load HomeFragment when user data is ready
-        navigationView.setCheckedItem(R.id.nav_home);
+        // Start with HomeFragment if this is the first time
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new HomeFragment())
+                    .commit();
+            navigationView.setCheckedItem(R.id.nav_home);
+        }
     }
 
     private void loadHomeFragment() {
@@ -93,27 +107,38 @@ public class AppMainActivity extends AppCompatActivity implements NavigationView
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
+        try {
+            int itemId = item.getItemId();
+            Fragment selectedFragment = null;
 
-        if (itemId == R.id.nav_home) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
-        } else if (itemId == R.id.profile) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ProfileFragment()).commit();
-        } else if (itemId == R.id.attendance) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AttendanceFragment()).commit();
-        } else if (itemId == R.id.signOut) {
-            // Sign out using AuthViewModel
-            authViewModel.signOut();
+            if (itemId == R.id.nav_home) {
+                selectedFragment = new HomeFragment();
+            } else if (itemId == R.id.profile) {
+                selectedFragment = new ProfileFragment();
+            } else if (itemId == R.id.attendance) {
+                selectedFragment = new AttendanceFragment();
+            } else if (itemId == R.id.signOut) {
+                // Sign out using AuthViewModel
+                authViewModel.signOut();
+                Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+                finish();
+                return true;
+            }
 
-            // Show logout message
-            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            if (selectedFragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, selectedFragment)
+                        .addToBackStack(null)  // Add to back stack so user can navigate back
+                        .commit();
+            }
 
-            // Close the activity to return to login screen
-            finish();
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error navigating: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return false;
         }
-
-        drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     @Override

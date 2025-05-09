@@ -55,8 +55,7 @@ public class HomeFragment extends Fragment {
 
         // Initialize AuthViewModel - use the activity scope to ensure we get the same instance
         authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
-        dbRef = FirebaseDatabase.getInstance().getReference("users"); // Reference for user data
-        DatabaseReference attendanceRef = FirebaseDatabase.getInstance().getReference("attendance"); // Reference for attendance data
+        dbRef = FirebaseDatabase.getInstance().getReference("users"); // Changed to users reference
 
         // bind UI
         tvGreeting = view.findViewById(R.id.greetingText);
@@ -84,7 +83,7 @@ public class HomeFragment extends Fragment {
                     tvGreeting.setText("Hello, " + user.username + "!");
                     updateStudentInfo(user);
                 });
-                fetchStudentData(attendanceRef);
+                fetchStudentData();
             } else {
                 Log.d(TAG, "User data is null");
             }
@@ -162,13 +161,13 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void fetchStudentData(DatabaseReference attendanceRef) {
+    private void fetchStudentData() {
         if (currentUser == null || currentUser.uid == null) {
             Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        attendanceRef.child(currentUser.uid).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.child(currentUser.uid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -261,12 +260,11 @@ public class HomeFragment extends Fragment {
     private void persistState() {
         if (currentUser == null || currentUser.uid == null) return;
         
-        DatabaseReference attendanceRef = FirebaseDatabase.getInstance().getReference("attendance");
         Map<String, Object> updates = new HashMap<>();
         updates.put("totalWorkedMillis", totalWorkedMillis);
         updates.put("lastTimeInMillis", lastTimeInMillis);
         
-        attendanceRef.child(currentUser.uid).updateChildren(updates)
+        dbRef.child(currentUser.uid).updateChildren(updates)
                 .addOnFailureListener(e -> 
                     Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
