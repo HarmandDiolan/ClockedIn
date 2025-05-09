@@ -188,24 +188,35 @@ public class AuthenticationRepository {
                 if (snapshot.exists()) {
                     Toast.makeText(application, "Email already registered", Toast.LENGTH_SHORT).show();
                 } else {
-                    // Encrypt the password before storing
-                    String encryptedPassword = PasswordUtils.encryptPassword(pass);
-                    
-                    // Create new user with encrypted password
-                    String uid = dbRef.push().getKey();
-                    User newUser = new User(uid, email, username, contactNumber, encryptedPassword);
-
-                    dbRef.child(uid).setValue(newUser)
-                            .addOnSuccessListener(aVoid -> {
-                                // Create a user object without the encrypted password for local use
-                                User userForLocal = new User(uid, email, username, contactNumber, null);
-                                currentUserMutableLiveData.postValue(userForLocal);
-                                saveUserToPrefs(userForLocal);
-                                Toast.makeText(application, "Registration successful", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(application, "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            });
+                    // Create user with Firebase Authentication
+                    firebaseAuth.createUserWithEmailAndPassword(email, pass)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                // Get the Firebase user
+                                com.google.firebase.auth.FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                                if (firebaseUser != null) {
+                                    String uid = firebaseUser.getUid();
+                                    
+                                    // Create new user in Realtime Database
+                                    User newUser = new User(uid, email, username, contactNumber, null);
+                                    dbRef.child(uid).setValue(newUser)
+                                        .addOnSuccessListener(aVoid -> {
+                                            // Create a user object without the encrypted password for local use
+                                            User userForLocal = new User(uid, email, username, contactNumber, null);
+                                            currentUserMutableLiveData.postValue(userForLocal);
+                                            saveUserToPrefs(userForLocal);
+                                            Toast.makeText(application, "Registration successful", Toast.LENGTH_SHORT).show();
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Toast.makeText(application, "Failed to save user data: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                        });
+                                }
+                            } else {
+                                // Registration failed
+                                Toast.makeText(application, "Registration failed: " + task.getException().getMessage(), 
+                                    Toast.LENGTH_LONG).show();
+                            }
+                        });
                 }
             }
 
@@ -217,42 +228,38 @@ public class AuthenticationRepository {
     }
 
     public void login(String email, String pass) {
-        Query emailQuery = dbRef.orderByChild("email").equalTo(email);
-        emailQuery.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    boolean userFound = false;
-                    for (DataSnapshot userSnapshot : snapshot.getChildren()) {
-                        User user = userSnapshot.getValue(User.class);
-                        if (user != null && user.password != null) {
-                            // Verify password against the encrypted one from database
-                            if (PasswordUtils.verifyPassword(pass, user.password)) {
-                                Log.d(TAG, "Login successful for: " + user.username);
-                                
-                                // Create a user object without the encrypted password for local use
-                                User userForLocal = new User(user.uid, user.email, user.username, user.contactNumber, null);
-                                currentUserMutableLiveData.postValue(userForLocal);
-                                saveUserToPrefs(userForLocal);
-                                Toast.makeText(application, "Login successful", Toast.LENGTH_SHORT).show();
-                                userFound = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!userFound) {
-                        Toast.makeText(application, "Invalid password", Toast.LENGTH_SHORT).show();
+        // Use Firebase Authentication for login
+        firebaseAuth.signInWithEmailAndPassword(email, pass)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    // Get the Firebase user
+                    com.google.firebase.auth.FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                    if (firebaseUser != null) {
+                        String uid = firebaseUser.getUid();
+                        
+                        // Get user data from Realtime Database
+                        dbRef.child(uid).get()
+                            .addOnSuccessListener(dataSnapshot -> {
+                                User user = dataSnapshot.getValue(User.class);
+                                if (user != null) {
+                                    currentUserMutableLiveData.postValue(user);
+                                    saveUserToPrefs(user);
+                                    Toast.makeText(application, "Login successful", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(application, "User data not found", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(application, "Failed to get user data: " + e.getMessage(), 
+                                    Toast.LENGTH_SHORT).show();
+                            });
                     }
                 } else {
-                    Toast.makeText(application, "Email not registered", Toast.LENGTH_SHORT).show();
+                    // Login failed
+                    Toast.makeText(application, "Login failed: " + task.getException().getMessage(), 
+                        Toast.LENGTH_SHORT).show();
                 }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(application, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
     }
 
     public void signOut() {
