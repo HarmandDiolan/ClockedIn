@@ -25,6 +25,7 @@ import android.provider.MediaStore;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 import com.example.clockedin.R;
 import com.example.clockedin.viewmodel.AuthViewModel;
@@ -63,12 +64,10 @@ public class AttendanceFragment extends Fragment {
     private ActivityResultLauncher<Intent> createDocumentLauncher;
 
     private static class AttendanceRecord {
-        String date;
-        String timeIn;
-        String timeOut;
+        long timeIn;
+        Long timeOut;
 
-        AttendanceRecord(String date, String timeIn, String timeOut) {
-            this.date = date;
+        AttendanceRecord(long timeIn, Long timeOut) {
             this.timeIn = timeIn;
             this.timeOut = timeOut;
         }
@@ -258,7 +257,6 @@ public class AttendanceFragment extends Fragment {
                 if (currentUser != null) {
                     document.add(new Paragraph("Employee Name: " + currentUser.username, normalFont));
                     document.add(new Paragraph("Email: " + currentUser.email, normalFont));
-                    document.add(new Paragraph("Contact: " + currentUser.contactNumber, normalFont));
                     document.add(new Paragraph("\n"));
                 }
 
@@ -284,44 +282,102 @@ public class AttendanceFragment extends Fragment {
                 table.addCell(headerCell2);
                 table.addCell(headerCell3);
 
-                // Add Current Record
-                String date = dateText.getText().toString().replace("Date: ", "");
-                String timeIn = timeInText.getText().toString().replace("Time In: ", "");
-                String timeOut = timeOutText.getText().toString().replace("Time Out: ", "");
+                // Fetch all attendance records
+                dbRef.child(currentUser.uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        try {
+                            List<AttendanceRecord> records = new ArrayList<>();
 
-                PdfPCell cell1 = new PdfPCell(new Phrase(date, normalFont));
-                PdfPCell cell2 = new PdfPCell(new Phrase(timeIn, normalFont));
-                PdfPCell cell3 = new PdfPCell(new Phrase(timeOut, normalFont));
+                            // Get stored records
+                            if (snapshot.child("timeRecords").exists()) {
+                                for (DataSnapshot recordSnapshot : snapshot.child("timeRecords").getChildren()) {
+                                    Long timeIn = recordSnapshot.child("timeIn").getValue(Long.class);
+                                    Long timeOut = recordSnapshot.child("timeOut").getValue(Long.class);
+                                    
+                                    if (timeIn != null) {
+                                        records.add(new AttendanceRecord(timeIn, timeOut));
+                                    }
+                                }
+                            }
 
-                cell1.setHorizontalAlignment(Element.ALIGN_CENTER);
-                cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
-                cell3.setHorizontalAlignment(Element.ALIGN_CENTER);
+                            // Add current session if clocked in
+                            Long currentTimeIn = snapshot.child("lastStoredTimeIn").getValue(Long.class);
+                            Long currentTimeOut = snapshot.child("lastStoredTimeOut").getValue(Long.class);
+                            if (currentTimeIn != null) {
+                                records.add(new AttendanceRecord(currentTimeIn, currentTimeOut));
+                            }
 
-                table.addCell(cell1);
-                table.addCell(cell2);
-                table.addCell(cell3);
+                            // Sort records by date (newest first)
+                            Collections.sort(records, (a, b) -> Long.compare(b.timeIn, a.timeIn));
 
-                document.add(table);
+                            // Add records to table
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+                            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
 
-                // Add Footer with Generation Time
-                document.add(new Paragraph("\n\n"));
-                SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
-                document.add(new Paragraph("Generated on: " + sdf.format(new Date()), normalFont));
+                            for (AttendanceRecord record : records) {
+                                Date timeInDate = new Date(record.timeIn);
 
-                document.close();
-                outputStream.close();
+                                PdfPCell dateCell = new PdfPCell(new Phrase(dateFormat.format(timeInDate), normalFont));
+                                PdfPCell timeInCell = new PdfPCell(new Phrase(timeFormat.format(timeInDate), normalFont));
+                                PdfPCell timeOutCell;
 
-                // Show success message
-                Toast.makeText(requireContext(), "PDF created successfully!", Toast.LENGTH_LONG).show();
+                                if (record.timeOut != null) {
+                                    Date timeOutDate = new Date(record.timeOut);
+                                    timeOutCell = new PdfPCell(new Phrase(timeFormat.format(timeOutDate), normalFont));
+                                } else {
+                                    timeOutCell = new PdfPCell(new Phrase("--", normalFont));
+                                }
 
-                // Open the PDF
-                openPdf(uri);
+                                dateCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                                timeInCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                                timeOutCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+                                table.addCell(dateCell);
+                                table.addCell(timeInCell);
+                                table.addCell(timeOutCell);
+                            }
+
+                            document.add(table);
+
+                            // Add Footer
+                            document.add(new Paragraph("\n\n"));
+                            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
+                            document.add(new Paragraph("Generated on: " + sdf.format(new Date()), normalFont));
+
+                            document.close();
+                            outputStream.close();
+
+                            requireActivity().runOnUiThread(() -> {
+                                Toast.makeText(requireContext(), "PDF created successfully!", Toast.LENGTH_LONG).show();
+                                openPdf(uri);
+                            });
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            requireActivity().runOnUiThread(() -> {
+                                Toast.makeText(requireContext(), 
+                                    "Error generating PDF: " + e.getMessage(), 
+                                    Toast.LENGTH_LONG).show();
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        requireActivity().runOnUiThread(() -> {
+                            Toast.makeText(requireContext(), 
+                                "Error fetching data: " + error.getMessage(), 
+                                Toast.LENGTH_LONG).show();
+                        });
+                    }
+                });
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(requireContext(),
-                    "Error generating PDF: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), 
+                "Error creating PDF: " + e.getMessage(), 
+                Toast.LENGTH_LONG).show();
         }
     }
 
