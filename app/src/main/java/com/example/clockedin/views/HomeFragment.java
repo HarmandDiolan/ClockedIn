@@ -27,6 +27,7 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -229,10 +230,20 @@ public class HomeFragment extends Fragment {
 
     private void recordTimeIn() {
         lastTimeInMillis = System.currentTimeMillis();
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("lastTimeInMillis", lastTimeInMillis);
+        updates.put("lastStoredTimeIn", lastTimeInMillis);
+        updates.put("lastStoredTimeOut", null);
+
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+
         Toast.makeText(getContext(),
                 "Clocked IN at " + formatTime(lastTimeInMillis),
                 Toast.LENGTH_SHORT).show();
-        persistState();
     }
 
     private void recordTimeOut() {
@@ -246,6 +257,17 @@ public class HomeFragment extends Fragment {
         long session = now - lastTimeInMillis;
         totalWorkedMillis += session;
 
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("totalWorkedMillis", totalWorkedMillis);
+        updates.put("lastTimeInMillis", 0L);
+        updates.put("lastStoredTimeOut", now);
+        updates.put("currentTimeOut", new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()));
+
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e ->
+                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+
         Toast.makeText(getContext(),
                 "Clocked OUT at " + formatTime(now) +
                         "\nSession: " + formatDuration(session) +
@@ -254,20 +276,6 @@ public class HomeFragment extends Fragment {
 
         lastTimeInMillis = 0L;
         updateHourDisplays();
-        persistState();
-    }
-
-    private void persistState() {
-        if (currentUser == null || currentUser.uid == null) return;
-        
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("totalWorkedMillis", totalWorkedMillis);
-        updates.put("lastTimeInMillis", lastTimeInMillis);
-        
-        dbRef.child(currentUser.uid).updateChildren(updates)
-                .addOnFailureListener(e -> 
-                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
     }
 
     private String formatTime(long millis) {
