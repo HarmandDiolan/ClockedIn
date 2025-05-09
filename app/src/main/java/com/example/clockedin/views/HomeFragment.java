@@ -228,40 +228,27 @@ public class HomeFragment extends Fragment {
         scanType = "";
     }
 
-    private void recordTimeIn() {
-        lastTimeInMillis = System.currentTimeMillis();
-
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("lastTimeInMillis", lastTimeInMillis);
-        updates.put("lastStoredTimeIn", lastTimeInMillis);
-        updates.put("lastStoredTimeOut", null);
-
-        dbRef.child(currentUser.uid).updateChildren(updates)
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
-
-        Toast.makeText(getContext(),
-                "Clocked IN at " + formatTime(lastTimeInMillis),
-                Toast.LENGTH_SHORT).show();
-    }
-
     private void recordTimeOut() {
         if (lastTimeInMillis == 0L) {
-            Toast.makeText(getContext(),
-                    "You must Time In first!",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "You must Time In first!", Toast.LENGTH_SHORT).show();
             return;
         }
         long now = System.currentTimeMillis();
         long session = now - lastTimeInMillis;
         totalWorkedMillis += session;
 
+        // Create a new record entry
+        String recordId = dbRef.child(currentUser.uid).child("timeRecords").push().getKey();
+        Map<String, Object> record = new HashMap<>();
+        record.put("timeIn", lastTimeInMillis);
+        record.put("timeOut", now);
+
         Map<String, Object> updates = new HashMap<>();
         updates.put("totalWorkedMillis", totalWorkedMillis);
         updates.put("lastTimeInMillis", 0L);
+        updates.put("lastStoredTimeIn", lastTimeInMillis);
         updates.put("lastStoredTimeOut", now);
-        updates.put("currentTimeOut", new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()));
+        updates.put("timeRecords/" + recordId, record);
 
         dbRef.child(currentUser.uid).updateChildren(updates)
                 .addOnFailureListener(e ->
@@ -276,6 +263,24 @@ public class HomeFragment extends Fragment {
 
         lastTimeInMillis = 0L;
         updateHourDisplays();
+    }
+
+    private void recordTimeIn() {
+        lastTimeInMillis = System.currentTimeMillis();
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("lastTimeInMillis", lastTimeInMillis);
+        updates.put("lastStoredTimeIn", lastTimeInMillis);
+        updates.put("lastStoredTimeOut", null);
+
+        dbRef.child(currentUser.uid).updateChildren(updates)
+                .addOnFailureListener(e ->
+                    Toast.makeText(getContext(), "Error saving data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+
+        Toast.makeText(getContext(),
+                "Clocked IN at " + formatTime(lastTimeInMillis),
+                Toast.LENGTH_SHORT).show();
     }
 
     private String formatTime(long millis) {
